@@ -27,7 +27,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 4. Khởi tạo thư mục Android & Giữ nguyên mã nguồn
+      - name: 4. Khởi tạo thư mục Android & Nâng cấp Kotlin 1.9.24
         run: |
           cp -r lib lib_kakeibo_backup
           cp pubspec.yaml pubspec_kakeibo_backup.yaml
@@ -36,6 +36,7 @@ jobs:
           cp pubspec_kakeibo_backup.yaml pubspec.yaml
           rm -rf lib_kakeibo_backup pubspec_kakeibo_backup.yaml test
           sed -i 's/android:label="kakeibo_money_note"/android:label="Sổ Thu Chi Kakeibo"/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "1.9.24"/g' android/settings.gradle
 
       - name: 5. Tải các thư viện (pub get)
         run: flutter pub get
