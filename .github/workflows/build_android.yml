@@ -1,0 +1,56 @@
+name: Build Android APK & AAB (CH Play)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Sổ Thu Chi Kakeibo (APK + AAB)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: 2. Cài đặt Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 3. Cài đặt Flutter SDK trên đám mây
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: 4. Khởi tạo thư mục Android & Cấu hình tên App
+        run: |
+          if [ ! -d "android" ]; then
+            flutter create . --project-name kakeibo_money_note --org com.kakeibo.moneynote --platforms=android
+          fi
+          sed -i 's/android:label="kakeibo_money_note"/android:label="Sổ Thu Chi Kakeibo"/g' android/app/src/main/AndroidManifest.xml
+
+      - name: 5. Tải các thư viện (pub get)
+        run: flutter pub get
+
+      - name: 6. Xuất file APK (Để kéo thả vào LDPlayer 9 / Điện thoại)
+        run: flutter build apk --release
+
+      - name: 7. Xuất file App Bundle .AAB (Để đăng lên CH Play)
+        run: flutter build appbundle --release
+
+      - name: 8. Đính kèm file APK để tải về
+        uses: actions/upload-artifact@v4
+        with:
+          name: So-Thu-Chi-Kakeibo-APK-for-LDPlayer9
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: 9. Đính kèm file AAB để đăng CH Play
+        uses: actions/upload-artifact@v4
+        with:
+          name: So-Thu-Chi-Kakeibo-AAB-for-GooglePlay
+          path: build/app/outputs/bundle/release/app-release.aab
