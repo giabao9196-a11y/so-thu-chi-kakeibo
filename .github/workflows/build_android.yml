@@ -27,21 +27,24 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 4. Khởi tạo thư mục Android & Cấu hình tên App
+      - name: 4. Khởi tạo thư mục Android & Giữ nguyên mã nguồn
         run: |
-          if [ ! -d "android" ]; then
-            flutter create . --project-name kakeibo_money_note --org com.kakeibo.moneynote --platforms=android
-          fi
+          cp -r lib lib_kakeibo_backup
+          cp pubspec.yaml pubspec_kakeibo_backup.yaml
+          flutter create . --project-name kakeibo_money_note --org com.kakeibo.moneynote --platforms=android
+          cp -r lib_kakeibo_backup/* lib/
+          cp pubspec_kakeibo_backup.yaml pubspec.yaml
+          rm -rf lib_kakeibo_backup pubspec_kakeibo_backup.yaml test
           sed -i 's/android:label="kakeibo_money_note"/android:label="Sổ Thu Chi Kakeibo"/g' android/app/src/main/AndroidManifest.xml
 
       - name: 5. Tải các thư viện (pub get)
         run: flutter pub get
 
       - name: 6. Xuất file APK (Để kéo thả vào LDPlayer 9 / Điện thoại)
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
 
       - name: 7. Xuất file App Bundle .AAB (Để đăng lên CH Play)
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --no-tree-shake-icons
 
       - name: 8. Đính kèm file APK để tải về
         uses: actions/upload-artifact@v4
