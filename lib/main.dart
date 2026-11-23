@@ -58,7 +58,7 @@ class _KakeiboMoneyNoteAppState extends State<KakeiboMoneyNoteApp> {
         useMaterial3: true,
         brightness: Brightness.light,
         colorSchemeSeed: const Color(0xFFE65100),
-        scaffoldBackgroundColor: const Color(0xFFFBF9F5), // Japanese Washi warm cream
+        scaffoldBackgroundColor: const Color(0xFFFBF9F5),
         cardColor: Colors.white,
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFFFBF9F5),
@@ -125,38 +125,124 @@ class _MainShellState extends State<MainShell> {
       ),
     ];
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        height: 65,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.edit_outlined),
-            selectedIcon: Icon(Icons.edit),
-            label: 'Nhập vào',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWideDesktop = constraints.maxWidth >= 720;
+
+        if (isWideDesktop) {
+          return Scaffold(
+            body: Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: _currentIndex,
+                  onDestinationSelected: (index) =>
+                      setState(() => _currentIndex = index),
+                  extended: constraints.maxWidth >= 980,
+                  minExtendedWidth: 210,
+                  leading: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE65100).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.menu_book_rounded,
+                            color: Color(0xFFE65100),
+                          ),
+                        ),
+                        if (constraints.maxWidth >= 980) ...[
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Sổ Thu Chi\nKakeibo',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.edit_outlined),
+                      selectedIcon: Icon(Icons.edit),
+                      label: Text('Nhập vào'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.calendar_month_outlined),
+                      selectedIcon: Icon(Icons.calendar_month),
+                      label: Text('Lịch thu chi'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.pie_chart_outline),
+                      selectedIcon: Icon(Icons.pie_chart),
+                      label: Text('Báo cáo'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.settings_outlined),
+                      selectedIcon: Icon(Icons.settings),
+                      label: Text('Cài đặt & Khác'),
+                    ),
+                  ],
+                ),
+                const VerticalDivider(width: 1, thickness: 1),
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 760),
+                      child: IndexedStack(
+                        index: _currentIndex,
+                        children: screens,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Scaffold(
+          body: IndexedStack(
+            index: _currentIndex,
+            children: screens,
           ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
-            label: 'Lịch',
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) =>
+                setState(() => _currentIndex = index),
+            height: 65,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.edit_outlined),
+                selectedIcon: Icon(Icons.edit),
+                label: 'Nhập vào',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calendar_month_outlined),
+                selectedIcon: Icon(Icons.calendar_month),
+                label: 'Lịch',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.pie_chart_outline),
+                selectedIcon: Icon(Icons.pie_chart),
+                label: 'Báo cáo',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: 'Khác',
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.pie_chart_outline),
-            selectedIcon: Icon(Icons.pie_chart),
-            label: 'Báo cáo',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Khác',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
