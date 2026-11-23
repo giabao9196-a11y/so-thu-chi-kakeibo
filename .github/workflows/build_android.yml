@@ -92,14 +92,14 @@ jobs:
       - name: 5. Xuất bản chạy ngay trên PC Windows (.EXE Release)
         run: flutter build windows --release --no-tree-shake-icons
 
-      - name: 6. Đóng gói gói .MSIX (Bản cài thử trên PC Local)
-        run: dart run msix:create --build-windows false
-
-      - name: 7. Đính kèm Bản chạy ngay trên PC Windows (Portable .EXE)
+      - name: 6. Đính kèm Bản chạy ngay trên PC Windows (Portable .EXE)
         uses: actions/upload-artifact@v4
         with:
           name: 3-Windows-PC-Portable-EXE
           path: build/windows/x64/runner/Release/
+
+      - name: 7. Đóng gói gói .MSIX (Bản cài thử trên PC Local)
+        run: dart run msix:create --build-windows false --install-certificate false
 
       - name: 8. Đính kèm Gói cài đặt Windows (.MSIX Local Test)
         uses: actions/upload-artifact@v4
@@ -111,7 +111,7 @@ jobs:
         shell: pwsh
         run: |
           Remove-Item "build/windows/x64/runner/Release/*.msix" -Force -ErrorAction SilentlyContinue
-          dart run msix:create --store --build-windows false
+          dart run msix:create --store --build-windows false --install-certificate false
 
       - name: 10. Đính kèm Gói .MSIX chuẩn để nộp lên Microsoft Store
         uses: actions/upload-artifact@v4
