@@ -1,6 +1,9 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/models.dart';
 
 class DatabaseHelper {
@@ -16,6 +19,24 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+      final supportDir = await getApplicationSupportDirectory();
+      final dbDir = Directory(join(supportDir.path, 'databases'));
+      if (!await dbDir.exists()) {
+        await dbDir.create(recursive: true);
+      }
+      final path = join(dbDir.path, filePath);
+      return await databaseFactory.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: _createDB,
+        ),
+      );
+    }
+
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
@@ -25,7 +46,6 @@ class DatabaseHelper {
       onCreate: _createDB,
     );
   }
-
   Future<void> _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE categories (
