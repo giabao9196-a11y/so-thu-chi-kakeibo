@@ -1,4 +1,4 @@
-name: Build Android APK & AAB (CH Play)
+name: Build Android (CH Play) & Windows PC (Microsoft Store)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-android:
-    name: Build Sổ Thu Chi Kakeibo (APK + AAB)
+    name: 1. Build Android (APK + AAB)
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +20,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 3. Cài đặt Flutter SDK trên đám mây
+      - name: 3. Cài đặt Flutter SDK
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
@@ -41,20 +41,80 @@ jobs:
       - name: 5. Tải các thư viện (pub get)
         run: flutter pub get
 
-      - name: 6. Xuất file APK (Để kéo thả vào LDPlayer 9 / Điện thoại)
+      - name: 6. Xuất file APK (Cho LDPlayer 9 / Điện thoại)
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: 7. Xuất file App Bundle .AAB (Để đăng lên CH Play)
+      - name: 7. Xuất file App Bundle .AAB (Cho Google Play)
         run: flutter build appbundle --release --no-tree-shake-icons
 
-      - name: 8. Đính kèm file APK để tải về
+      - name: 8. Đính kèm file APK
         uses: actions/upload-artifact@v4
         with:
-          name: So-Thu-Chi-Kakeibo-APK-for-LDPlayer9
+          name: 1-Android-APK-for-LDPlayer9
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      - name: 9. Đính kèm file AAB để đăng CH Play
+      - name: 9. Đính kèm file AAB
         uses: actions/upload-artifact@v4
         with:
-          name: So-Thu-Chi-Kakeibo-AAB-for-GooglePlay
+          name: 2-Android-AAB-for-GooglePlay
           path: build/app/outputs/bundle/release/app-release.aab
+
+  build-windows:
+    name: 2. Build Windows PC (EXE + Microsoft Store MSIX)
+    runs-on: windows-latest
+
+    steps:
+      - name: 1. Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: 2. Cài đặt Flutter SDK trên Windows Server
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: 3. Khởi tạo khung Windows Desktop C++ & Giữ nguyên mã nguồn
+        shell: pwsh
+        run: |
+          flutter config --enable-windows-desktop
+          Copy-Item -Path "lib" -Destination "lib_kakeibo_backup" -Recurse -Force
+          Copy-Item -Path "pubspec.yaml" -Destination "pubspec_kakeibo_backup.yaml" -Force
+          flutter create . --project-name kakeibo_money_note --org com.kakeibo.moneynote --platforms=windows
+          Copy-Item -Path "lib_kakeibo_backup\*" -Destination "lib" -Recurse -Force
+          Copy-Item -Path "pubspec_kakeibo_backup.yaml" -Destination "pubspec.yaml" -Force
+          Remove-Item -Path "lib_kakeibo_backup", "pubspec_kakeibo_backup.yaml", "test" -Recurse -Force -ErrorAction SilentlyContinue
+          (Get-Content "windows/runner/main.cpp") -replace 'L"kakeibo_money_note"', 'L"Sổ Thu Chi Kakeibo"' | Set-Content "windows/runner/main.cpp"
+
+      - name: 4. Tải các thư viện (pub get)
+        run: flutter pub get
+
+      - name: 5. Xuất bản chạy ngay trên PC Windows (.EXE Release)
+        run: flutter build windows --release --no-tree-shake-icons
+
+      - name: 6. Đóng gói gói .MSIX (Bản cài thử trên PC Local)
+        run: dart run msix:create --build-windows false
+
+      - name: 7. Đính kèm Bản chạy ngay trên PC Windows (Portable .EXE)
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3-Windows-PC-Portable-EXE
+          path: build/windows/x64/runner/Release/
+
+      - name: 8. Đính kèm Gói cài đặt Windows (.MSIX Local Test)
+        uses: actions/upload-artifact@v4
+        with:
+          name: 4-Windows-MSIX-Local-Installer
+          path: build/windows/x64/runner/Release/*.msix
+
+      - name: 9. Đóng gói gói .MSIX chuẩn Microsoft Store (Partner Center Upload)
+        shell: pwsh
+        run: |
+          Remove-Item "build/windows/x64/runner/Release/*.msix" -Force -ErrorAction SilentlyContinue
+          dart run msix:create --store --build-windows false
+
+      - name: 10. Đính kèm Gói .MSIX chuẩn để nộp lên Microsoft Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5-Windows-MSIX-for-Microsoft-Store
+          path: build/windows/x64/runner/Release/*.msix
