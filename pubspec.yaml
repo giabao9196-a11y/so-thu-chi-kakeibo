@@ -28,9 +28,9 @@ dev_dependencies:
 
 msix_config:
   display_name: Sổ Thu Chi Kakeibo
-  publisher_display_name: Kakeibo Studio
-  identity_name: KakeiboStudio.SoThuChiKakeibo
-  publisher: CN=00000000-0000-0000-0000-000000000000
+  publisher_display_name: giabaonguyen
+  identity_name: giabaonguyen.SThuChiKakeibo
+  publisher: CN=7ABB0CBD-E422-4D15-877D-95644C0E9E8A
   msix_version: 1.0.0.0
   capabilities: internetClient
   languages: vi-vn, en-us
